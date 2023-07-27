@@ -103,16 +103,21 @@ class Trainer:
     
     def generate_predictions(self, model, seed_input, num_generations):
         model.eval()
-        current_input = seed_input
+        current_input = seed_input[:, 0].unsqueeze(1)
         predictions = []
 
         with torch.no_grad():
-            for _ in range(num_generations):
+            for i in range(num_generations):
                 output = model(current_input)
-                predictions.append(output)
-                current_input = torch.cat((current_input[:, 1:, :], output.unsqueeze(1)), dim=1)
-
-        return torch.stack(predictions, dim=1)
+                if i < seed_input.shape[1]-1:
+                    current_input = seed_input[:, i+1, :].unsqueeze(1)
+                else:
+                    current_input = output
+                    predictions.append(output)
+                # current_input = torch.cat((current_input[:, 1:, :], output.unsqueeze(1)), dim=1
+        predictions = torch.stack(predictions, dim=1).squeeze()
+        final = torch.cat([seed_input, predictions], dim=1)
+        return final
 
     def plot_losses(self, df):
         plt.plot(range(len(df)), df['train_loss'], color='red', label='train_loss')

@@ -80,17 +80,18 @@ def main(opt):
         test_dataset, test_scaler = rescale(test_dataset)
         dataset = {"X": test_dataset}
         all_test_dataset = saits.impute(dataset)
-        test_dataset = all_test_dataset[:, :opt.window_size, :]
+        seed_timesteps = 21
+        test_dataset = all_test_dataset[:, :seed_timesteps, :]
         test_dataset = torch.tensor(test_dataset).float()
         gt_file = os.path.join(opt.root, f'truesetpoint_{trial}.csv')
         y_true = get_groundtruth(gt_file)
         X_train, y_train = create_sub_sequences(train_dataset, window_size=opt.window_size, to_tensor=True)
         X_val, y_val = create_sub_sequences(val_dataset, window_size=opt.window_size, to_tensor=True)
-        # train_dataset = TimeSeriesDataset(train_dataset)
-        # val_dataset = TimeSeriesDataset(val_dataset)
-        train_dataset = TensorDataset(X_train, y_train)
+        train_dataset = TimeSeriesDataset(train_dataset)
+        val_dataset = TimeSeriesDataset(val_dataset)
+        # train_dataset = TensorDataset(X_train, y_train)
+        # val_dataset = TensorDataset(X_val, y_val)
         train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
-        val_dataset = TensorDataset(X_val, y_val)
         val_loader = DataLoader(val_dataset, batch_size=512, shuffle=False)
         # Define dimensions
         input_dim = train_dataset[0][0].shape[-1]
@@ -101,7 +102,7 @@ def main(opt):
         model = LSTMModel(input_dim, hidden_dim, output_dim)
         # model = TransAm()
         criterion = nn.MSELoss()
-        optimizer = optim.Adam(model.parameters(), lr=0.001)
+        optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
         trainer = Trainer(model, optimizer, criterion, trial)
         logging.info('Training model...')
@@ -134,7 +135,7 @@ def main(opt):
         trainer.plot_losses(df)
         model = trainer.load(f"sandbox/new_saved/best_model_{trial}.pth")
         X_gen = trainer.generate_predictions(model, test_dataset, 169-opt.window_size)
-        X_gen = torch.cat([test_dataset, X_gen], dim=1)
+        # X_gen = torch.cat([test_dataset, X_gen], dim=1)
         y_pred = inverse_transform_data(X_gen.numpy(), test_scaler)
         # y_pred = X_gen.numpy()
         plot_pred(y_pred, y_true, f'sandbox/new_saved/plot_pred_{trial}.png')

@@ -31,6 +31,6 @@ class TimeSeriesDataset(Dataset):
         # Input is all but the last time step
         input_data = self.data[idx, :-1, :]
         # Label is the last time step
-        label = self.data[idx, -1, :]
+        label = self.data[idx, 1:, :]
         
         return input_data, label

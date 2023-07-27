@@ -17,9 +17,8 @@ class LSTMModel(nn.Module):
     def forward(self, x):
         lstm_out, hidden = self.lstm(x)
         # lstm_out, _ = self.lstm2(lstm_out)
-        out = lstm_out[:, -1, :]
         # out = self.dropout(out)
-        output = self.linear(out)
+        output = self.linear(lstm_out)
         return output
 
 class PositionalEncoding(nn.Module):
