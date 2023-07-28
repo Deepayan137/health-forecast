@@ -23,7 +23,6 @@ from sandbox.model import LSTMModel, TransAm
 from sandbox.trainer import Trainer
 from sandbox.impute import impute_fn
 from sandbox.metrics import Metrics
-from sandbox.dataset import TimeSeriesDataset
 
 torch.manual_seed(42)  #
 
@@ -86,8 +85,6 @@ def main(opt):
         y_true = get_groundtruth(gt_file)
         X_train, y_train = create_sub_sequences(train_dataset, window_size=opt.window_size, to_tensor=True)
         X_val, y_val = create_sub_sequences(val_dataset, window_size=opt.window_size, to_tensor=True)
-        # train_dataset = TimeSeriesDataset(train_dataset)
-        # val_dataset = TimeSeriesDataset(val_dataset)
         train_dataset = TensorDataset(X_train, y_train)
         train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
         val_dataset = TensorDataset(X_val, y_val)
