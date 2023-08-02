@@ -5,7 +5,7 @@ class TimeSeriesDataset(Dataset):
     """
     Time Series Dataset for next-step prediction.
     """
-    def __init__(self, data):
+    def __init__(self, data, model_name='lstm', seed=21):
         """
         Args:
         data (numpy.array): Numpy array of time series data of shape (N, T, D)
@@ -13,7 +13,8 @@ class TimeSeriesDataset(Dataset):
         dimensionality of the data at each time step.
         """
         self.data = torch.tensor(data, dtype=torch.float32)
-        
+        self.model_name = model_name
+        self.seed = seed
     def __len__(self):
         return len(self.data)
     
@@ -29,8 +30,11 @@ class TimeSeriesDataset(Dataset):
         second-to-last time step and label is the time series data at the last time step.
         """
         # Input is all but the last time step
-        input_data = self.data[idx, :-1, :]
-        # Label is the last time step
-        label = self.data[idx, 1:, :]
-        
-        return input_data, label
+        input_data = self.data[idx]
+        if self.model_name != "lstm":
+            # Label is the last time step
+            seed = self.seed
+            input_data = self.data[idx, :seed, :]
+            label = self.data[idx, seed:, :]
+            return input_data, label
+        return input_data

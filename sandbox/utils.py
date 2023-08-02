@@ -5,37 +5,34 @@ from matplotlib import pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import pandas as pd
 
+def plot_data(X_orig, log_path):
+    """
+    Plots the data for each N and the first dimension of D.
+
+    Args:
+    X_orig (numpy.array): The data of shape (N, T, D).
+    log_path (str): The path where to save the plot.
+    """
+    N, T, D = X_orig.shape
+
+    # Make sure the directory exists
+    os.makedirs(log_path, exist_ok=True)
+
+    # Create a new figure
+    plt.figure()
+
+    # Iterate over each N
+    for i in range(N):
+        # Plot the data for this N and the first dimension of D
+        plt.plot(X_orig[i, :, 0])
+
+    # Save the figure to the log path
+    plt.savefig(os.path.join(log_path, 'combined_plot.png'))
+
+    # Close the figure to free up memory
+    plt.close()
 
 
-def plot_data(X_orig, X_missing, X_filled, log_path):
-    # Define the number of time instances
-    num_time_instances = X_orig.shape[1]
-
-    # Extract only the last column (-1) of the first data entry (0) for each array
-    X_orig, X_missing, X_filled = X_orig[0, :, -1],\
-     X_missing[0, :, -1], X_filled[0, :, -1]
-
-    # Replace nan values with a constant
-    # nan_replacement_value = -1  # Can be any other number or computed statistic
-    # X_missing = np.nan_to_num(X_missing, nan=nan_replacement_value)
-    # X_filled = np.nan_to_num(X_filled, nan=nan_replacement_value)
-
-    # Create the plot
-    plt.plot(range(num_time_instances), X_orig, color='blue', linewidth=2, label='X orig')
-    plt.plot(range(num_time_instances), X_missing, color='red', linewidth=2, label='X missing')
-    plt.plot(range(num_time_instances), X_filled, color='green', linewidth=2, label='X filled')
-
-    # Set plot labels and title
-    plt.xlabel('Time')
-    plt.ylabel('Variable')
-    plt.title('Original, Missing and Imputated Data')
-
-    # Add legend
-    plt.legend()
-
-    # Save the plot to a file
-    plt.savefig(os.path.join(log_path, "data_plot.png"))
-    plt.close()  # Close the plot
 
 def plot_pred(X_pred, gt_points, log_path):
     num_individuals, num_time_instances, num_variables = X_pred.shape
