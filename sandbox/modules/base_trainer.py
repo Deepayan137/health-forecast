@@ -7,14 +7,19 @@ import pdb
 
 
 class BaseTrainer:
-    def __init__(self, model, optimizer, criterion, seed, trial):
+    def __init__(self, opt, model, cls_model, 
+        optimizer, criterion, cls_criterion, seed, trial):
+        self.opt = opt
         self.model = model
+        self.cls_model = cls_model
         self.optimizer = optimizer
         self.criterion = criterion
+        self.cls_criterion = cls_criterion
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.trial = trial
         # move the model to the device
         self.model.to(self.device)
+        self.cls_model.to(self.device)
         self.seed = seed
     
     def generate_predictions(self, X_batch, model=None, num_generations=None):
@@ -72,6 +77,22 @@ class BaseTrainer:
             return x_mix, y_mix
         
         return x_mix
+
+    def compute_accuracy(self, logits, labels):
+        """
+        Computes the binary classification accuracy.
+
+        Args:
+        - logits (torch.Tensor): Raw output values from the model.
+        - labels (torch.Tensor): True labels.
+
+        Returns:
+        - float: Accuracy value.
+        """
+        predicted_labels = (logits > 0).float()  # Convert logits to binary labels
+        correct_predictions = (predicted_labels == labels).float().sum()
+        accuracy = correct_predictions / labels.size(0)
+        return accuracy.item()
 
     def plot_losses(self, df, path):
         plt.plot(range(len(df)), df['train_loss'], color='red', label='train_loss')

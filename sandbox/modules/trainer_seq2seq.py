@@ -8,9 +8,10 @@ import pdb
 from .base_trainer import BaseTrainer
 
 class Seq2SeqTrainer(BaseTrainer):
-    def __init__(self, model, optimizer, criterion, seed, trial, 
+    def __init__(self, opt, model, optimizer, criterion, seed, trial, 
         tf_ratio=1.0, tf_decay=0.999):
-        super().__init__(model, optimizer, criterion, seed, trial)
+        super().__init__(opt, model, optimizer, criterion, seed, trial)
+        self.opt = opt
         self.tf_ratio = tf_ratio
         self.tf_decay = tf_decay
     
@@ -20,15 +21,17 @@ class Seq2SeqTrainer(BaseTrainer):
         X_batch = X_batch.to(self.device)
         return model(X_batch)
     
-    def train_one_epoch(self, train_loader, do_jitter=False, do_mixup=False):
+    def train_one_epoch(self, train_loader, do_jitter=False, do_mixup=False, pretrain=False):
         self.model.train()  # Switch to train mode
         epoch_loss = 0
         for X_train, y_train in (train_loader):
             X_train, y_train = X_train.to(self.device), y_train.to(self.device)
             if do_jitter:
-                X_train = self.add_jitter(X_train)
+                if not pretrain:
+                    X_train = self.add_jitter(X_train)
             if do_mixup:
-                X_train, y_train = self.mixup_data(X_train, y_train)
+                if not pretrain:
+                    X_train, y_train = self.mixup_data(X_train, y_train)
 
             self.optimizer.zero_grad()  # Clear the gradients
             output = self.model(X_train, y_train, self.tf_ratio)

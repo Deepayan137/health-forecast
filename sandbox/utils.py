@@ -1,11 +1,12 @@
 import os
+import pdb
 import logging
 import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import pandas as pd
 
-def plot_data(X_orig, log_path):
+def plot_data(X_orig, log_path="sandbox/new_saved", name='combined_plot.png'):
     """
     Plots the data for each N and the first dimension of D.
 
@@ -25,9 +26,8 @@ def plot_data(X_orig, log_path):
     for i in range(N):
         # Plot the data for this N and the first dimension of D
         plt.plot(X_orig[i, :, 0])
-
     # Save the figure to the log path
-    plt.savefig(os.path.join(log_path, 'combined_plot.png'))
+    plt.savefig(os.path.join(log_path, name))
 
     # Close the figure to free up memory
     plt.close()
