@@ -32,6 +32,29 @@ def plot_data(X_orig, log_path="sandbox/new_saved", name='combined_plot.png'):
     # Close the figure to free up memory
     plt.close()
 
+def plot_imputed_data(imputed_data):
+    # Extract the data for variable V
+    imputed_data_V = imputed_data[:, :, 0]
+
+    # Separate the data into two groups
+    group_0_data_pickle = imputed_data_V[:50]
+    group_1_data_pickle = imputed_data_V[50:]
+
+    # Plotting the data for both groups
+    fig, ax = plt.subplots(figsize=(14, 7))
+
+    # Group 0 in red
+    for patient_data in group_0_data_pickle:
+        ax.plot(patient_data, color='red', alpha=0.3)
+
+    # Group 1 in blue
+    for patient_data in group_1_data_pickle:
+        ax.plot(patient_data, color='blue', alpha=0.3)
+
+    ax.set_title('Visualizing Imputed Data from Pickle File')
+    ax.set_xlabel('Time (Days)')
+    ax.set_ylabel('V')
+    plt.show()
 
 
 def plot_pred(X_pred, gt_points, log_path):

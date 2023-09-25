@@ -8,12 +8,24 @@ def format_data(dataset):
     y = dataset[:, 1:T]
     return X, y
 
-def get_groundtruth(csv_path):
-    df = pd.read_csv(csv_path, delimiter=';')
-    data = np.zeros((100), dtype=np.float32)
+def read_csv(csv_path):
+    df = pd.read_csv(csv_path, delimiter=',')
+    df['Time'] = df['Time'].astype(int)
+    data = np.zeros((100, 169, 1))
+    labels = []
     for i, id in enumerate(df['Id'].unique()):
-        data[i] = df[df['Id'] == id]['V'].values
-    return data
+        # This is where the magic happens, darling! Filter the rows for the current patient id
+        patient_data = df[df['Id'] == id]
+        if i < 50:
+            labels.append(0)
+        else:
+            labels.append(1)
+        # Put that data in the right place
+        data[i, patient_data['Time'].values] = patient_data[['V']].values
+
+    # Voila! We're done. Now, go out there and own it!
+    return data, labels
+
 
 def read_csv_with_missing_val(csv_path):
     df = pd.read_csv(csv_path, delimiter=';')
@@ -25,14 +37,41 @@ def read_csv_with_missing_val(csv_path):
     # elif 'validation' in csv_path:
     #     data = np.full((100, 21, 2), np.nan)
     # Now let's strut our stuff on the runway, I mean, for each unique id in the dataset
+    labels = []
     for i, id in enumerate(df['Id'].unique()):
         # This is where the magic happens, darling! Filter the rows for the current patient id
         patient_data = df[df['Id'] == id]
-        
+        group_id = np.unique(patient_data['Group'].values).item()
+        if group_id == 'Group1':
+            labels.append(0)
+        else:
+            labels.append(1)
         # Put that data in the right place
-        data[i, patient_data['Time'].values] = patient_data[['V', 'CD4']].values
+        data[i, patient_data['Time'].values] = patient_data[['V']].values
 
     # Voila! We're done. Now, go out there and own it!
+    return data, labels
+
+def get_groundtruth(csv_path):
+    df = pd.read_csv(csv_path, delimiter=';')
+    data = np.zeros((100), dtype=np.float32)
+    for i, id in enumerate(df['Id'].unique()):
+        data[i] = df[df['Id'] == id]['V'].values
+    return data
+
+def get_groundtruth_modified(csv_path):
+    df = pd.read_csv(csv_path, delimiter=';')
+    days_to_extract = [30, 60, 90, 120, 150, 168]
+    num_patients = len(df['Id'].unique())
+    data = np.zeros((num_patients, len(days_to_extract)), dtype=np.float32)
+    
+    for i, id in enumerate(df['Id'].unique()):
+        patient_data = df[df['Id'] == id]
+        for j, day in enumerate(days_to_extract):
+            value_for_day = patient_data[patient_data['Time'] == day]['log10VL'].values
+            if value_for_day.size > 0:
+                data[i, j] = value_for_day[0]
+    
     return data
 
 class CustomScaler:

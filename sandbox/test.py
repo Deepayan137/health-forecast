@@ -7,51 +7,37 @@ from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import accuracy_score
 from tqdm import *
 import pdb
-# Read CSV function
-def read_csv(csv_path):
-    df = pd.read_csv(csv_path, delimiter=',')
-    df['Time'] = df['Time'].astype(int)
-    data = np.zeros((100, 169, 1))
-    labels = []
-    for i, id in enumerate(df['Id'].unique()):
-        patient_data = df[df['Id'] == id]
-        if i < 50:
-            labels.append(0)
-        else:
-            labels.append(1)
-        data[i, patient_data['Time'].values] = patient_data[['V']].values
-    return data, labels
+import pickle
 
+from sandbox.data_utils import read_csv_with_missing_val, read_csv, CustomScaler
+from sandbox.models import LSTMModel, LSTMClassifier
+from sandbox.impute import impute_missing_values
 # Load data
-train_data, train_labels = read_csv('sandbox/data/phds/pred_training_1.csv')
-val_data, val_labels = read_csv('sandbox/data/phds/pred_validation_1.csv')
+import pandas as pd
+import numpy as np
 
+
+
+train_data, train_labels = read_csv_with_missing_val("sandbox/data/phds/training_1.csv")
+# train_data, saits_0, saits_1 = impute_missing_values(train_data, train_labels)
+train_data = np.load("train_imputed.npy")
+val_data, val_labels = read_csv_with_missing_val("sandbox/data/phds/validation_1.csv")
+# val_data, _, _ = impute_missing_values(val_data, val_labels)
+val_data = np.load("val_imputed.npy")
+scaler = CustomScaler()
+train_data = scaler.transform(train_data)
+val_data = scaler.transform(val_data)
 # Convert to PyTorch tensors
 train_data_tensor = torch.tensor(train_data, dtype=torch.float32)
 train_labels_tensor = torch.tensor(train_labels, dtype=torch.float32)
 val_data_tensor = torch.tensor(val_data, dtype=torch.float32)
 val_labels_tensor = torch.tensor(val_labels, dtype=torch.float32)
 
-# LSTM Classifier with Average Pooling
-class LSTMClassifier(nn.Module):
-    def __init__(self, input_dim, hidden_dim):
-        super(LSTMClassifier, self).__init__()
-        self.hidden_dim = hidden_dim
-        self.lstm = nn.LSTM(input_dim, hidden_dim, batch_first=True)
-        self.avg_pool = nn.AvgPool1d(kernel_size=169)
-        self.classifier = nn.Linear(hidden_dim, 1)
-
-    def forward(self, x):
-        lstm_out, hidden = self.lstm(x)
-        lstm_out = lstm_out.permute(0, 2, 1)
-        pooled_out = self.avg_pool(lstm_out).squeeze(-1)
-        output = self.classifier(pooled_out)
-        return output.squeeze()
 
 # Model, Loss, Optimizer
 model = LSTMClassifier(input_dim=1, hidden_dim=64).cuda()
 criterion = nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
 # Dataloaders
 train_dataset = TensorDataset(train_data_tensor, train_labels_tensor)
@@ -63,22 +49,36 @@ print("Training...")
 num_epochs = 100
 progress_bar = trange(num_epochs, desc="Epoch")
 
+last_loss = float('inf')  # Initialize with a high value
+
 for epoch in progress_bar:
     model.train()
     epoch_loss = 0.0
+    epoch_accuracy = 0.0
     num_batches = len(train_loader)
+    
     for X_batch, y_batch in train_loader:
         X_batch, y_batch = X_batch.cuda(), y_batch.cuda()
         logits = model(X_batch)
         loss = criterion(logits, y_batch)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+        
+        # Only backpropagate and update if the current loss is less than the last loss
+        if loss.item() < last_loss:
+            preds = torch.sigmoid(logits)
+            preds = torch.round(preds).cpu().detach().numpy()
+            tr_acc = accuracy_score(y_batch.cpu().detach().numpy(), preds)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
         epoch_loss += loss.item()
-    
+        epoch_accuracy += tr_acc.item()
     avg_epoch_loss = epoch_loss / num_batches
+    avg_epoch_accuracy = epoch_accuracy / num_batches
+    last_loss = avg_epoch_loss  # Update the last_loss value
+    
     progress_bar.set_description(f"Epoch {epoch + 1}, Loss: {avg_epoch_loss:.4f}")
-
+    print(f"Epoch:{epoch}...Accuracy:{avg_epoch_accuracy}")
 print("Training complete...Evaluating...")
 # Evaluation
 model.eval()

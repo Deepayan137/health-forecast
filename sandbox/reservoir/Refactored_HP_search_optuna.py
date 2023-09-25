@@ -15,9 +15,10 @@ from sklearn.model_selection import train_test_split
 from optuna.storages import JournalStorage, JournalFileStorage
 
 from sandbox.data_utils import read_csv_with_missing_val,\
- get_groundtruth, format_data, CustomScaler, read_csv
+ get_groundtruth, format_data, CustomScaler, read_csv, get_groundtruth_modified
 from sandbox.reservoir.sk_node import SklearnNode
 from sandbox.metrics import Metrics
+from sandbox.impute import impute_missing_values, impute_test_data
 optuna.logging.set_verbosity(optuna.logging.ERROR)
 
 def parse_option():
@@ -59,10 +60,10 @@ class TimeSeriesHyperParameterTuner:
         rpy.verbosity(0)
         losses = []
         # Trial generated parameters (with log scale)
-        self.opt.iss = trial.suggest_float("iss", 0.05, 0.20, log=True)
-        # self.opt.sr = trial.suggest_float("sr", 2.2e-3, 1, log=True)
-        # self.opt.lr = trial.suggest_float("lr", 0.3, 1, log=True)
-        # self.opt.ridge = trial.suggest_float("ridge", 1e-7, 4e-3, log=True)
+        # self.opt.iss = trial.suggest_float("iss", 0.05, 0.20, log=True)
+        self.opt.sr = trial.suggest_float("sr", 0.1, 2, log=True)
+        self.opt.lr = trial.suggest_float("lr", 0.1, 0.8, log=True)
+        self.opt.ridge = trial.suggest_float("ridge", 0.01, 0.5, log=True)
         # N = trial.suggest_int('N', 100, 500, 100)
         # ridge = trial.suggest_float("ridge", 1e-3, 1, log=True)
         for seed in range(self.opt.nb_seeds):
@@ -84,19 +85,22 @@ class TimeSeriesHyperParameterTuner:
             # losses.append(loss)
             warming_out = model.run(self.warming_inputs, reset=True)
             nb_generations = 148
-            X_gen = np.zeros((all_test_dataset.shape[0], nb_generations, 1))
+            X_gen = np.zeros((all_test_dataset.shape[0], nb_generations, 2))
             y = np.array(warming_out)
             for t in range(nb_generations):  # generation
                 y = np.array(model.run(y))
                 y_last = y[:, -1, :]
                 X_gen[:, t, :] = y_last
                 y = np.concatenate((y[:, 1:, :], y_last[:, None, :]), axis=1)
-            X_gen = np.concatenate((self.warming_inputs, X_gen), axis=1)
-            y_pred = test_scaler.inverse_transform(X_gen)
-            metric_calculator = Metrics(self.y_true, y_pred[:, -1, 0])
+            X_gen = np.concatenate((warming_inputs, X_gen), axis=1)
+            X_gen = X_gen[:, :, 0]
+            y_pred = scaler.inverse_transform(X_gen)
+            np.save('reservoir_predictions.npy', y_pred)
+            selected_days = [30, 60, 90, 120, 150, 168]
+            metric_calculator = Metrics(self.y_true, y_pred[:, selected_days, 0])
             metrics = metric_calculator()
-            print(metrics)
-            losses.append(metrics['rrmse'])
+            losses.append(metrics['rmse'][-1])
+            print(metrics['rmse'][-1])
         return np.mean(losses)
     
     def _optimize_study(self, n_trials, process_idx):
@@ -146,38 +150,51 @@ if __name__ == "__main__":
     # Data Preprocessing
     args = parse_option()
     num = 1
+    trial = 1
     if args.use_ode:
         csv_path = os.path.join(args.root, f'pred_training_1.csv')
-        dataset = read_csv(csv_path)
+        dataset, labels = read_csv(csv_path)
     else:
-        imp_path = f"{args.save_dir}/imputed_data_{num}.pkl"
+        csv_path = os.path.join(args.root, f'training_{trial}.csv')
+        dataset, labels = read_csv_with_missing_val(csv_path)
+        imp_path = f"sandbox/new_saved/imputed_data_1.pkl"
         with open(imp_path, 'rb') as f:
-            (dataset, saits) = pickle.load(f)
+            (dataset, saits0, saits1) = pickle.load(f)
 
     # Scale the dataset
     scaler = CustomScaler()
     dataset = scaler.transform(dataset)
-
+    ###
+    labels = np.array(labels) # Convert list to numpy array
+    expanded_labels = np.expand_dims(labels, axis=1).repeat(dataset.shape[1], axis=1)
+    expanded_labels = np.expand_dims(expanded_labels, axis=2)
+    dataset = np.concatenate((dataset, expanded_labels), axis=2)
+    ###
     train_dataset, val_dataset = train_test_split(dataset, shuffle=True, train_size=0.9)
     X_train, y_train = format_data(train_dataset)
     X_test, y_test = format_data(val_dataset)
     dataset_trainval = ((X_train, y_train), (X_test, y_test))
 
-    gt_file = os.path.join(args.root, f'truesetpoint_{num}.csv')
-    y_true = get_groundtruth(gt_file)
+    gt_file = os.path.join(args.root, f'true_validation{trial}.csv')
+    y_true = get_groundtruth_modified(gt_file)
     if args.use_ode:
         test_csv_path = os.path.join(args.root, f'pred_validation_1.csv')
-        all_test_dataset = read_csv(test_csv_path)
+        all_test_dataset, test_labels = read_csv(test_csv_path)
     else:
         test_csv_path = os.path.join(args.root, f'validation_{num}.csv')
-        test_dataset = read_csv_with_missing_val(test_csv_path)
-        dataset = {"X": test_dataset}
-        all_test_dataset = saits.impute(dataset)
+        test_dataset, test_labels = read_csv_with_missing_val(test_csv_path)
+        all_test_dataset = impute_test_data(test_dataset, test_labels, saits0, saits1)
+    
     # test_scaler = CustomScaler()
     all_test_dataset = scaler.transform(all_test_dataset)
     seed_timesteps = 21
     warming_inputs = all_test_dataset[:, :seed_timesteps, :]
-
+    ####
+    test_labels = np.array(test_labels) # Convert list to numpy array
+    expanded_test_labels = np.expand_dims(test_labels, axis=1).repeat(warming_inputs.shape[1], axis=1)
+    expanded_test_labels = np.expand_dims(expanded_test_labels, axis=2)
+    warming_inputs = np.concatenate((warming_inputs, expanded_test_labels), axis=2)
+    ####
     if not os.path.exists(args.log_dir):
         os.makedirs(args.log_dir)
 
