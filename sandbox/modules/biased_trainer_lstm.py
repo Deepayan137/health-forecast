@@ -45,9 +45,7 @@ class BiasedLSTMTrainer(BaseTrainer):
         return loss
 
 
-    def generate_predictions(self, X_batch, labels, model=None, num_generations=None):
-        if not model:
-            model = self.model
+    def generate_val_predictions(self, X_batch, labels, model=None, num_generations=None):
         current_input = X_batch.to(self.device)
         labels = labels.to(self.device).unsqueeze(1).expand(-1, current_input.shape[1]).unsqueeze(2)
         current_input = torch.cat((current_input, labels), dim=2)
@@ -59,12 +57,36 @@ class BiasedLSTMTrainer(BaseTrainer):
                 predictions.append(output[:, -1, :])
                 # Remove the oldest observation and append latest output to current_input
                 current_input = torch.cat((current_input[:, 1:, 0].unsqueeze(-1), output[:, -1].unsqueeze(-1)), dim=1)
-
                 # Append the label to the input at every time step
                 current_input = torch.cat((current_input, labels), dim=2)
 
         y_pred = torch.stack(predictions, dim=1)
         y_pred = torch.cat([X_batch.to(self.device), y_pred], dim=1)
+        return y_pred
+
+
+    def generate_test_predictions(self, X_seed, labels, model=None, num_generations=None):
+        model.eval()  # Set the model to evaluation mode
+        seed = X_seed.shape[1]
+        # Move the seed input and labels to the device
+        X_seed = X_seed.to(self.device)
+        labels = labels.to(self.device).unsqueeze(1).expand(-1, num_generations).unsqueeze(2)
+        
+        predictions = []
+        with torch.no_grad():
+            for i in range(num_generations):
+                if i < seed:
+                    current_input = X_seed[:, i:i+1, :]  # Take the corresponding input from X_seed
+                else:
+                    current_input = predictions[-1]  # Take the last predicted output
+                
+                current_input = torch.cat((current_input, labels[:, i:i+1, :]), dim=2)  # Append the label
+                
+                output = model(current_input)  # Generate output
+                predictions.append(output[:, -1, :].unsqueeze(1))  # Store the last output
+        pdb.set_trace()
+        # Combine all the predictions
+        y_pred = torch.cat(predictions, dim=1)
         return y_pred
 
 
@@ -96,6 +118,6 @@ class BiasedLSTMTrainer(BaseTrainer):
                 X_val = X_val.to(self.device)
                 labels = labels.to(self.device)
                 seed_input = X_val[:, :self.seed]
-                y_pred = self.generate_predictions(seed_input, labels, num_generations=X_val.shape[1]-self.seed)
+                y_pred = self.generate_val_predictions(seed_input, labels, num_generations=X_val.shape[1]-self.seed)
                 loss  += self.criterion(y_pred[:, -1, 0], X_val[:, -1, 0])
         return loss/len(val_loader)

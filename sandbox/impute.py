@@ -24,7 +24,7 @@ def call_saits(X):
     return imputation, saits
 
 
-def impute_missing_values(data, labels):
+def impute_missing_values(data, labels, smooth=False):
     # Extract data for V (assuming it's the first dimension)
     data_V = data[:, :, 0]
     
@@ -35,12 +35,15 @@ def impute_missing_values(data, labels):
     # Linear interpolation
     ffill_bfill_0, saits_0 = call_saits(group_0_data[:, :, None])
     ffill_bfill_1, saits_1 = call_saits(group_1_data[:, :, None])
-    # ffill_bfill_0 = np.array([moving_average(patient, 5) for patient in ffill_bfill_0.squeeze()])
-    # ffill_bfill_1 = np.array([moving_average(patient, 5) for patient in ffill_bfill_1.squeeze()])
     data = np.concatenate((ffill_bfill_0, ffill_bfill_1), axis=0)
+    if smooth:
+        ffill_bfill_0 = np.array([moving_average(patient, 5) for patient in ffill_bfill_0.squeeze()])
+        ffill_bfill_1 = np.array([moving_average(patient, 5) for patient in ffill_bfill_1.squeeze()])
+        data = np.concatenate((ffill_bfill_0, ffill_bfill_1), axis=0)
+        data = data[:, :, None]
     return data, saits_0, saits_1
 
-def impute_test_data(data, labels, saits0, saits1):
+def impute_test_data(data, labels, saits0, saits1, smooth=False):
     data_V = data[:, :, 0][:, :, None]
     # Separate data based on groups
     group_0_data = data_V[np.array(labels) == 0]
@@ -51,4 +54,9 @@ def impute_test_data(data, labels, saits0, saits1):
     dataset = {"X": group_1_data}
     ffill_bfill_1 = saits1.impute(dataset)
     data = np.concatenate((ffill_bfill_0, ffill_bfill_1), axis=0)
+    if smooth:
+        ffill_bfill_0 = np.array([moving_average(patient, 5) for patient in ffill_bfill_0.squeeze()])
+        ffill_bfill_1 = np.array([moving_average(patient, 5) for patient in ffill_bfill_1.squeeze()])
+        data = np.concatenate((ffill_bfill_0, ffill_bfill_1), axis=0)
+        data = data[:, :, None]
     return data

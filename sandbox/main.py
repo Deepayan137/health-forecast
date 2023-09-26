@@ -105,7 +105,7 @@ def main(opt):
             dataset, labels = read_csv_with_missing_val(csv_path)
             imp_path = f"{opt.save_dir}/imputed_data_{trial}.pkl"
             if not os.path.exists(imp_path):
-                dataset, saits0, saits1 = impute_missing_values(dataset, labels)
+                dataset, saits0, saits1 = impute_missing_values(dataset, labels, smooth=True)
                 print(f"Writing imputed data to {imp_path}")
                 with open(imp_path, 'wb') as f:
                     pickle.dump((dataset, saits0, saits1), f)
@@ -118,17 +118,17 @@ def main(opt):
         dataset = scaler.transform(dataset)
         train_dataset, val_dataset, train_labels, val_labels = train_test_split(dataset, labels, shuffle=True, train_size=0.9, stratify=labels)
         seed_timesteps = opt.seed_ts
-        # if opt.use_ode:
-        test_csv_path = os.path.join(opt.root, f'true_validation1.csv')
-        test_dataset, test_labels = read_csv_with_missing_val(test_csv_path)
-        test_dataset = scaler.transform(test_dataset)
-        test_dataset = test_dataset[:, :seed_timesteps, :]
-        # else:
-        #     test_csv_path = os.path.join(opt.root, f'validation_{trial}.csv')
-        #     test_dataset, test_labels = read_csv_with_missing_val(test_csv_path)
-        #     test_dataset = impute_test_data(test_dataset, test_labels, saits0, saits1)
-        #     test_dataset = scaler.transform(test_dataset)
-        #     test_dataset = test_dataset[:, :seed_timesteps, :]
+        if opt.use_ode:
+            test_csv_path = os.path.join(opt.root, f'pred_validation_1.csv')
+            test_dataset, test_labels = read_csv(test_csv_path)
+            test_dataset = scaler.transform(test_dataset)
+            test_dataset = test_dataset[:, :seed_timesteps, :]
+        else:
+            test_csv_path = os.path.join(opt.root, f'validation_{trial}.csv')
+            test_dataset, test_labels = read_csv_with_missing_val(test_csv_path)
+            test_dataset = impute_test_data(test_dataset, test_labels, saits0, saits1, smooth=False)
+            test_dataset = scaler.transform(test_dataset)
+            test_dataset = test_dataset[:, :seed_timesteps, :]
         test_dataset, test_labels = torch.tensor(test_dataset).float(),\
         torch.tensor(test_labels).float()
         # gt_file = os.path.join(opt.root, f'truesetpoint_{trial}.csv')
@@ -176,8 +176,7 @@ def main(opt):
         # optimizer.param_groups[0]['lr'] == 0.0001
         train(opt, trainer, train_loader, val_loader, trial)
         model = trainer.load(f"{opt.save_dir}/best_{opt.model_name}_{trial}.pth")
-        X_gen = trainer.generate_predictions(test_dataset, test_labels, model, 169-opt.seed_ts)
-        # X_gen = torch.cat([test_dataset, X_gen.cpu().detach()], dim=1)
+        X_gen = trainer.generate_test_predictions(test_dataset, test_labels, model, 169)
         y_pred = X_gen.detach().cpu().numpy()
         y_pred = scaler.inverse_transform(y_pred)
         np.save('final/lstm_predictions_raw.npy', y_pred)

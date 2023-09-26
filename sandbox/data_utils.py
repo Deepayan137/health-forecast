@@ -288,6 +288,7 @@ class CustomScaler:
         Returns:
         - np.ndarray: Scaled data of the same shape.
         """
+        
         N, T, D = data.shape
         self.original_shape = (N, T, D)
         
@@ -299,7 +300,6 @@ class CustomScaler:
         
         # Reshape back to original shape
         data_scaled = data_scaled.reshape(N, T, D)
-        
         return data_scaled
 
     def inverse_transform(self, scaled_data):

@@ -11,7 +11,7 @@ class LSTMModel(nn.Module):
         self.hidden_dim = hidden_dim
         self.lstm = nn.LSTM(input_dim, hidden_dim, batch_first=True)
         
-        self.dropout = nn.Dropout(0.5)
+        # self.dropout = nn.Dropout(0.5)
         # self.lstm2 = nn.LSTM(hidden_dim, hidden_dim, batch_first=True)
         self.linear = nn.Linear(hidden_dim, output_dim)
 
