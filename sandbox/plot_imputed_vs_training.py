@@ -37,10 +37,10 @@ for i in range(imputed_training.shape[0]):
 # Adding legends
 handles, labels = plt.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
-plt.legend(by_label.values(), by_label.keys())
+plt.legend(by_label.values(), by_label.keys(), loc='lower right', bbox_to_anchor=(1, 0))
 
 plt.title('True Trajectories vs Imputed Training Data')
 plt.xlabel('Time (Days)')
 plt.ylabel('log10VL')
 plt.show()
-plt.savefig('imputed_vs_training.png')
+plt.savefig('new_imputed_vs_training.png')

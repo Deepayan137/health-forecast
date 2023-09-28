@@ -18,7 +18,7 @@ class BiasedLSTMTrainer(BaseTrainer):
         expanded_labels = labels.unsqueeze(1).expand(-1, T).unsqueeze(2)
         output_sequence = torch.zeros((N, T-self.seed, 1)).float().to(X_batch.device)
         
-        TEACHER_FORCING_RATIO = 1.
+        TEACHER_FORCING_RATIO = 1
         
         X_in = X_batch[:, :self.seed, :]
         labels_in = expanded_labels[:, :self.seed, :]
@@ -66,6 +66,8 @@ class BiasedLSTMTrainer(BaseTrainer):
 
 
     def generate_test_predictions(self, X_seed, labels, model=None, num_generations=None):
+        if not model:
+            model = self.model
         model.eval()  # Set the model to evaluation mode
         seed = X_seed.shape[1]
         # Move the seed input and labels to the device
@@ -84,9 +86,9 @@ class BiasedLSTMTrainer(BaseTrainer):
                 
                 output = model(current_input)  # Generate output
                 predictions.append(output[:, -1, :].unsqueeze(1))  # Store the last output
-        pdb.set_trace()
         # Combine all the predictions
         y_pred = torch.cat(predictions, dim=1)
+        y_pred = torch.cat([X_seed[:, :1], y_pred[:, 1:]], dim=1)
         return y_pred
 
 
@@ -118,6 +120,6 @@ class BiasedLSTMTrainer(BaseTrainer):
                 X_val = X_val.to(self.device)
                 labels = labels.to(self.device)
                 seed_input = X_val[:, :self.seed]
-                y_pred = self.generate_val_predictions(seed_input, labels, num_generations=X_val.shape[1]-self.seed)
-                loss  += self.criterion(y_pred[:, -1, 0], X_val[:, -1, 0])
+                y_pred = self.generate_test_predictions(seed_input, labels, num_generations=165)
+                loss  += self.criterion(y_pred, X_val)
         return loss/len(val_loader)

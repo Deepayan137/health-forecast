@@ -43,7 +43,7 @@ for i in range(100):
 plt.title('True and Predicted Trajectories')
 plt.xlabel('Time (Days)')
 plt.ylabel('log10VL')
-plt.legend(loc='upper right')
+plt.legend(loc='lower right')
 plt.show()
 plt.savefig('final/LSTM_Predictions_Raw.png')
 

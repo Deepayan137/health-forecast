@@ -20,7 +20,7 @@ from sandbox.data_utils import read_csv_with_missing_val, read_csv,\
  get_groundtruth, create_sub_sequences, rescale, inverse_transform_data, CustomScaler, \
  get_groundtruth_modified
 from sandbox.utils import plot_data, plot_pred, setup_logger, plot_imputed_data
-from sandbox.models import LSTMModel, LSTMClassifier, Seq2Seq, Seq2SeqAttn
+from sandbox.models import LSTMModel, LSTMClassifier, Seq2Seq, Seq2SeqAttn, EnhancedLSTMModel
 from sandbox.modules import LSTMTrainer, Seq2SeqTrainer, BiasedLSTMTrainer
 from sandbox.impute import impute_missing_values, impute_test_data
 from sandbox.loss import MaskedMSELoss
@@ -117,7 +117,7 @@ def main(opt):
         scaler = CustomScaler()
         dataset = scaler.transform(dataset)
         train_dataset, val_dataset, train_labels, val_labels = train_test_split(dataset, labels, shuffle=True, train_size=0.9, stratify=labels)
-        seed_timesteps = opt.seed_ts
+        seed_timesteps = 25
         if opt.use_ode:
             test_csv_path = os.path.join(opt.root, f'pred_validation_1.csv')
             test_dataset, test_labels = read_csv(test_csv_path)
@@ -134,7 +134,6 @@ def main(opt):
         # gt_file = os.path.join(opt.root, f'truesetpoint_{trial}.csv')
         gt_file = os.path.join(opt.root, f'true_validation{trial}.csv')
         y_true = get_groundtruth_modified(gt_file)
-        
         if opt.pretrain:
             synth_path = os.path.join(opt.save_dir, f"synth_data_{trial}.pkl")
             print(f"Loading imputed data from {synth_path}")
@@ -173,33 +172,28 @@ def main(opt):
                 opt.tf_ratio, opt.tf_decay)
         if opt.pretrain:
             train(opt, trainer, pretrain_loader, val_loader, trial, pretrain=True)
-        # optimizer.param_groups[0]['lr'] == 0.0001
         train(opt, trainer, train_loader, val_loader, trial)
         model = trainer.load(f"{opt.save_dir}/best_{opt.model_name}_{trial}.pth")
         X_gen = trainer.generate_test_predictions(test_dataset, test_labels, model, 169)
         y_pred = X_gen.detach().cpu().numpy()
         y_pred = scaler.inverse_transform(y_pred)
-        np.save('final/lstm_predictions_raw.npy', y_pred)
+        if opt.use_ode:
+            np.save('final/lstm_predictions_ode.npy', y_pred)
+        else:
+            np.save('final/lstm_predictions_raw.npy', y_pred)
         # select only required days
         selected_days = [30, 60, 90, 120, 150, 168]
-        # y_pred = y_pred[:, selected_days]
-        # y_pred = np.asarray(y_pred)
-        # plot_pred(y_pred, y_true, f'{opt.save_dir}/plot_pred_{trial}.png')
-        # np.save(f'{opt.save_dir}/pred_{trial}.npy', y_pred[:, -1, 0])
         metric_calculator = Metrics(y_true, y_pred[:, selected_days, 0])
         metrics = metric_calculator()
         df = pd.DataFrame(metrics)
-        df.to_csv('final/lstm_metrics_every_month_raw.csv')
+        if opt.use_ode:
+            df.to_csv('final/lstm_metrics_every_month_ode.csv')
+        else:
+            df.to_csv('final/lstm_metrics_every_month_raw.csv')
         print(f'Forecast metrics:{metrics}')
-        metric_list.append(metrics)
-        df = pd.DataFrame(metric_list)
-        df.to_csv(f'{exp_name}.csv', index=False)
-    mean_bias = np.mean(df["bias"])
-    mean_rbias = np.mean(df["relative_bias"])
-    mean_rmse = np.mean(df["rmse"])
-    # print(f'''mean bias:{mean_bias}\n
-    #     mean_relative_bias:{mean_rbias}\n
-    #     mean_rmse:{mean_rmse}''')
+    # mean_bias = np.mean(df["bias"])
+    # mean_rbias = np.mean(df["relative_bias"])
+    # mean_rmse = np.mean(df["rmse"])
 
 if __name__ == '__main__':
     opt = parse_option()

@@ -23,7 +23,7 @@ def call_saits(X):
     # mae = cal_mae(imputation, X_intact, indicating_mask)  # calculate mean absolute error on the ground truth (artificially-missing values)
     return imputation, saits
 
-
+window_size = 5
 def impute_missing_values(data, labels, smooth=False):
     # Extract data for V (assuming it's the first dimension)
     data_V = data[:, :, 0]
@@ -37,8 +37,8 @@ def impute_missing_values(data, labels, smooth=False):
     ffill_bfill_1, saits_1 = call_saits(group_1_data[:, :, None])
     data = np.concatenate((ffill_bfill_0, ffill_bfill_1), axis=0)
     if smooth:
-        ffill_bfill_0 = np.array([moving_average(patient, 5) for patient in ffill_bfill_0.squeeze()])
-        ffill_bfill_1 = np.array([moving_average(patient, 5) for patient in ffill_bfill_1.squeeze()])
+        ffill_bfill_0 = np.array([moving_average(patient, window_size) for patient in ffill_bfill_0.squeeze()])
+        ffill_bfill_1 = np.array([moving_average(patient, window_size) for patient in ffill_bfill_1.squeeze()])
         data = np.concatenate((ffill_bfill_0, ffill_bfill_1), axis=0)
         data = data[:, :, None]
     return data, saits_0, saits_1
@@ -55,8 +55,8 @@ def impute_test_data(data, labels, saits0, saits1, smooth=False):
     ffill_bfill_1 = saits1.impute(dataset)
     data = np.concatenate((ffill_bfill_0, ffill_bfill_1), axis=0)
     if smooth:
-        ffill_bfill_0 = np.array([moving_average(patient, 5) for patient in ffill_bfill_0.squeeze()])
-        ffill_bfill_1 = np.array([moving_average(patient, 5) for patient in ffill_bfill_1.squeeze()])
+        ffill_bfill_0 = np.array([moving_average(patient, window_size) for patient in ffill_bfill_0.squeeze()])
+        ffill_bfill_1 = np.array([moving_average(patient, window_size) for patient in ffill_bfill_1.squeeze()])
         data = np.concatenate((ffill_bfill_0, ffill_bfill_1), axis=0)
         data = data[:, :, None]
     return data
