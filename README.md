@@ -1,261 +1,84 @@
-<a href="https://github.com/WenjieDu/PyPOTS">
-    <img src="https://raw.githubusercontent.com/WenjieDu/PyPOTS/main/docs/_static/figs/PyPOTS_logo.svg?sanitize=true" width="200" align="right">
-</a>
 
-## <p align="center">Welcome to PyPOTS</p>
-**<p align="center">A Python Toolbox for Data Mining on Partially-Observed Time Series</p>**
+# RRI-PHDS-ODE-neural-net-study
 
-<p align="center">
-    <img alt="Python version" src="https://img.shields.io/badge/Python-v3.7--3.10-E97040?logo=python&logoColor=white">
-    <img alt="powered by Pytorch" src="https://img.shields.io/badge/PyTorch-❤️-F8C6B5?logo=pytorch&logoColor=white">
-    <a href="https://pypi.org/project/">
-        <img alt="the latest release version" src="https://img.shields.io/github/v/release/wenjiedu/pypots?color=EE781F&include_prereleases&label=Release">
-    </a>
-    <a href="https://github.com/WenjieDu/PyPOTS/blob/main/LICENSE">
-        <img alt="GPL-v3 license" src="https://img.shields.io/badge/License-GPL--v3-E9BB41">
-    </a>
-    <a href="https://github.com/WenjieDu/PyPOTS/blob/main/README.md#-community">
-        <img alt="Community" src="https://img.shields.io/badge/join_us-community!-C8A062">
-    </a>
-    <a href="https://github.com/WenjieDu/PyPOTS/graphs/contributors">
-        <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/wenjiedu/pypots?color=D8E699&label=Contributors&logo=GitHub">
-    </a>
-    <a href="https://github.com/WenjieDu/PyPOTS/stargazers">
-        <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/wenjiedu/pypots?logo=Github&color=6BB392&label=Stars">
-    </a>
-    <a href="https://github.com/WenjieDu/PyPOTS/forks">
-        <img alt="GitHub Repo forks" src="https://img.shields.io/github/forks/wenjiedu/pypots?logo=Github&color=91B821&label=Forks">
-    </a>
-    <a href="https://codeclimate.com/github/WenjieDu/PyPOTS">
-        <img alt="Code Climate maintainability" src="https://img.shields.io/codeclimate/maintainability-percentage/WenjieDu/PyPOTS?color=3C7699&label=Maintainability&logo=codeclimate">
-    </a>
-    <a href="https://coveralls.io/github/WenjieDu/PyPOTS">
-        <img alt="Coveralls coverage" src="https://img.shields.io/coverallsCoverage/github/WenjieDu/PyPOTS?branch=main&logo=coveralls&color=75C1C4&label=Coverage">
-    </a>
-    <a href="https://github.com/WenjieDu/PyPOTS/actions/workflows/testing_ci.yml">
-        <img alt="GitHub Testing" src="https://img.shields.io/github/actions/workflow/status/wenjiedu/pypots/testing_ci.yml?logo=github&color=C8D8E1&label=CI">
-    </a>
-    <a href="https://arxiv.org/abs/2305.18811">
-        <img alt="arXiv DOI" src="https://img.shields.io/badge/DOI-10.48550/arXiv.2305.18811-F8F7F0">
-    </a>
-    <a href="https://anaconda.org/conda-forge/pypots">
-        <img alt="Conda downloads" src="https://img.shields.io/conda/dn/conda-forge/pypots?label=Conda%20Downloads&color=AED0ED&logo=anaconda&logoColor=white">
-    </a>
-    <a href="https://pypi.org/project/pypots">
-        <img alt="PyPI downloads" src="https://static.pepy.tech/personalized-badge/pypots?period=total&units=international_system&left_color=grey&right_color=teal&left_text=PyPI%20Downloads&logo=github">
-    </a>
+A comparitive study of neural network models vs mechanistic ODE models for the task of forecasting with very limited and sparse data.
 
-</p>
+## Project Description
 
-⦿ `Motivation`: Due to all kinds of reasons like failure of collection sensors, communication error,
-and unexpected malfunction, missing values are common to see in time series from the real-world environment.
-This makes partially-observed time series (POTS) a pervasive problem in open-world modeling and prevents advanced
-data analysis. Although this problem is important, the area of data mining on POTS still lacks a dedicated toolkit.
-PyPOTS is created to fill in this blank.
+In study study we compare the performance of 3 distinct neural network architectures: an MLP, an ESN model with a reservoir, and an LSTM model against a mechanistic ODE model on a simple data forecasting task, using simulated patient data enriched with random missing values to mimic real-world scenarios. Given the sparse nature of the data, we performed various pre-processing steps such as imputation using SAITS and smoothing with a moving average to fill in the gaps. Reservoir and LSTM models were trained auto-regressively, while the MLP model leveraged initial data to make predictions at specific future points.
 
-⦿ `Mission`: PyPOTS (pronounced "Pie Pots") is born to become a handy toolbox that is going to make data mining on POTS easy rather than
-tedious, to help engineers and researchers focus more on the core problems in their hands rather than on how to deal
-with the missing parts in their data. PyPOTS will keep integrating classical and the latest state-of-the-art data mining
-algorithms for partially-observed multivariate time series. For sure, besides various algorithms, PyPOTS is going to
-have unified APIs together with detailed documentation and interactive examples across algorithms as tutorials.
+## Requirements
+- pytorch 1.12
+- pypots
+- reservoirpy
+- scikit-learn
 
-<a href="https://github.com/WenjieDu/TSDB">
-    <img src="https://raw.githubusercontent.com/WenjieDu/TSDB/main/docs/_static/figs/TSDB_logo.svg?sanitize=true" align="left" width="160" alt="TSDB logo"/>
-</a>
+(Optionally, you can perform a `pip install -r requirements.txt`)
 
-To make various open-source time-series datasets readily available to our users,
-PyPOTS gets supported by project [TSDB (Time-Series Data Base)](https://github.com/WenjieDu/TSDB),
-a toolbox making loading time-series datasets super easy!
+## Usage
 
-Visit [TSDB](https://github.com/WenjieDu/TSDB) right now to know more about this handy tool 🛠!
-It now supports a total of 119 open-source datasets.
-<br clear="left">
-
-The rest of this readme file is organized as follows:
-[**❖ Installation**](#-installation),
-[**❖ Usage**](#-usage),
-[**❖ Available Algorithms**](#-available-algorithms),
-[**❖ Citing PyPOTS**](#-citing-pypots),
-[**❖ Contribution**](#-contribution),
-[**❖ Community**](#-community).
+Instructions on how to use/run your project. This should include:
 
 
-## ❖ Installation
-You can refer to [the installation instruction](https://docs.pypots.com/en/latest/install.html) in PyPOTS documentation for a guideline with more details.
+Example:
+\```bash
+git clone https://github.com/Deepayan137/health-forecast.git
+cd health-forecast
+pip install -r requirements.txt
 
-PyPOTS is available on both [PyPI](https://pypi.python.org/pypi/pypots) and [Anaconda](https://anaconda.org/conda-forge/pypots).
-You can install PyPOTS as shown below:
+\```
 
-``` bash
-# by pip
-pip install pypots            # the first time installation
-pip install pypots --upgrade  # update pypots to the latest version
+Data Preparation:
 
-# by conda
-conda install -c conda-forge pypots  # the first time installation
-conda update  -c conda-forge pypots  # update pypots to the latest version
-````
+dowload the datafiles from this [gdrive link](https://drive.google.com/file/d/1dU0Jud300RWbRgFxK-u1zIOB84QW12b3/view?usp=drive_link)
+untar the compressed file and put in `data` folder
 
-Alternatively, you can install from the latest source code with the latest features but may be not officially released yet:
-> pip install https://github.com/WenjieDu/PyPOTS/archive/main.zip
+### For training the LSTM model
 
+`python -m src.train_lstm --out_dim 1 --epochs 600 --exp_name --trial 1`
 
-## ❖ Usage
-<a href="https://github.com/WenjieDu/BrewPOTS">
-    <img src="https://raw.githubusercontent.com/WenjieDu/BrewPOTS/main/figs/BrewPOTS_logo.jpg" align="left" width="160" alt="BrewPOTS logo"/>
-</a>
+For training an LSTM based model on outputs from a Mechanistic ODE model
 
-PyPOTS tutorials have been released. Considering the future workload, I separate the tutorials into a single repo,
-and you can find them in [BrewPOTS](https://github.com/WenjieDu/BrewPOTS).
-Take a look at it now, and learn how to brew your POTS datasets!
+`python -m src.train_lstm --out_dim 1 --epochs 600 --exp_name --trial 1 --use_ode`
 
-You can also find a simple and quick-start tutorial notebook on Google Colab with
-[this link](https://colab.research.google.com/drive/1HEFjylEy05-r47jRy0H9jiS_WhD0UWmQ?usp=sharing).
-If you have further questions, please refer to PyPOTS documentation [docs.pypots.com](https://docs.pypots.com).
-Besides, you can also [raise an issue](https://github.com/WenjieDu/PyPOTS/issues) or [ask in our community](#-community).
+### For Reservoir
 
-We present you a usage example of imputing missing values in time series with PyPOTS below, you can click it to view.
+step 1: Find the right hyper-parameters for the resevoir
 
-<details>
-<summary><b>Click here to see an example applying SAITS on PhysioNet2012 for imputation:</b></summary>
+`python -m src.reservoir.hp_search_optuna --nb_trial 40 --study_name hp_search --trial 1`
 
-``` python
-import numpy as np
-from sklearn.preprocessing import StandardScaler
-from pypots.data import load_specific_dataset, mcar, masked_fill
-from pypots.imputation import SAITS
-from pypots.utils.metrics import cal_mae
-# Data preprocessing. Tedious, but PyPOTS can help.
-data = load_specific_dataset('physionet_2012')  # PyPOTS will automatically download and extract it.
-X = data['X']
-num_samples = len(X['RecordID'].unique())
-X = X.drop(['RecordID', 'Time'], axis = 1)
-X = StandardScaler().fit_transform(X.to_numpy())
-X = X.reshape(num_samples, 48, -1)
-X_intact, X, missing_mask, indicating_mask = mcar(X, 0.1) # hold out 10% observed values as ground truth
-X = masked_fill(X, 1 - missing_mask, np.nan)
-dataset = {"X": X}
-print(dataset["X"].shape)  # (11988, 48, 37), 11988 samples, 48 time steps, 37 features
-# Model training. This is PyPOTS showtime.
-saits = SAITS(n_steps=48, n_features=37, n_layers=2, d_model=256, d_inner=128, n_heads=4, d_k=64, d_v=64, dropout=0.1, epochs=10)
-saits.fit(dataset)  # train the model. Here I use the whole dataset as the training set, because ground truth is not visible to the model.
-imputation = saits.impute(dataset)  # impute the originally-missing values and artificially-missing values
-mae = cal_mae(imputation, X_intact, indicating_mask)  # calculate mean absolute error on the ground truth (artificially-missing values)
-```
-</details>
+The parameter `--nb_trial` refers to the number of trials the huper-parameter search library will perfrom in a given search-space.
+
+You can visualize the parameters by following the notebook at `src/reservoir/visualize.ipynb`
+
+For more information on hyperparameter-search, please refer to this [link](https://reservoirpy.readthedocs.io/en/latest/user_guide/hyper.html)
+
+step 2: Once the hyper-parameters are fixed you can run
+
+`python -m src.reservoir.main --trial 1`
+
+This command will train the reservoir model and output the forecast results on specified days.
+
+**Note:** You can perform the hp-search and forecast on the outputs of the mechanistic model by adding the `--use_ode` flag, similar to how we did for the LSTM model.
 
 
-## ❖ Available Algorithms
-PyPOTS supports imputation, classification, clustering, and forecasting tasks on multivariate time series with missing values. The currently available algorithms of four tasks are cataloged in the following table with four partitions. The paper references are all listed at the bottom of this readme file. Please refer to them if you want more details.
+### For MLP
 
-|   ***`Imputation`***   |     🚥      |                                                                                        🚥                                                                                         |    🚥    |
-|:----------------------:|:-----------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------:|
-|        **Type**        |  **Abbr.**  |                                                                    **Full name of the algorithm/model/paper**                                                                     | **Year** |
-|       Neural Net       |    SAITS    |                                                               Self-Attention-based Imputation for Time Series [^1]                                                                |   2023   |
-|       Neural Net       | Transformer | Attention is All you Need [^2];<br>Self-Attention-based Imputation for Time Series [^1];<br><sub>Note: proposed in [^2], and re-implemented as an imputation model in [^1].</sub> |   2017   |
-|       Neural Net       |    BRITS    |                                                              Bidirectional Recurrent Imputation for Time Series [^3]                                                              |   2018   |
-|       Neural Net       |    M-RNN    |                                                                  Multi-directional Recurrent Neural Network [^9]                                                                  |   2019   |
-|         Naive          |    LOCF     |                                                                         Last Observation Carried Forward                                                                          |    -     |
-| ***`Classification`*** |     🚥      |                                                                                        🚥                                                                                         |    🚥    |
-|        **Type**        |  **Abbr.**  |                                                                    **Full name of the algorithm/model/paper**                                                                     | **Year** |
-|       Neural Net       |    BRITS    |                                                              Bidirectional Recurrent Imputation for Time Series [^3]                                                              |   2018   |
-|       Neural Net       |    GRU-D    |                                                  Recurrent Neural Networks for Multivariate Time Series with Missing Values [^4]                                                  |   2018   |
-|       Neural Net       |  Raindrop   |                                                    Graph-Guided Network for Irregularly Sampled Multivariate Time Series [^5]                                                     |   2022   |
-|   ***`Clustering`***   |     🚥      |                                                                                        🚥                                                                                         |    🚥    |
-|        **Type**        |  **Abbr.**  |                                                                    **Full name of the algorithm/model/paper**                                                                     | **Year** |
-|       Neural Net       |    CRLI     |                                                      Clustering Representation Learning on Incomplete time-series data [^6]                                                       |   2021   |
-|       Neural Net       |    VaDER    |                                                                  Variational Deep Embedding with Recurrence [^7]                                                                  |   2019   |
-|  ***`Forecasting`***   |     🚥      |                                                                                        🚥                                                                                         |    🚥    |
-|        **Type**        |  **Abbr.**  |                                                                    **Full name of the algorithm/model/paper**                                                                     | **Year** |
-|     Probabilistic      |    BTTF     |                                                                    Bayesian Temporal Tensor Factorization [^8]                                                                    |   2021   |
+`python -m src.train_mlp --trial 1`
 
+for ode based inputs
 
-## ❖ Citing PyPOTS
-The paper introducing PyPOTS is available on arXiv at [this URL](https://arxiv.org/abs/2305.18811),
-and we are pursuing to publish it in prestigious academic venues, e.g. JMLR (track for
-[Machine Learning Open Source Software](https://www.jmlr.org/mloss/)). If you use PyPOTS in your work,
-please cite it as below and 🌟star this repository to make others notice this library. 🤗
+`python -m src.train_mlp --trial 1 --use_ode`
 
-``` bibtex
-@article{du2023PyPOTS,
-title={{PyPOTS: A Python Toolbox for Data Mining on Partially-Observed Time Series}},
-author={Wenjie Du},
-year={2023},
-eprint={2305.18811},
-archivePrefix={arXiv},
-primaryClass={cs.LG},
-url={https://arxiv.org/abs/2305.18811},
-doi={10.48550/arXiv.2305.18811},
-}
-```
+For all the methods, the above-mentioned commands will output the forecast results 
+on specified days on the terminal and also generate csv files with metrics such
+as bias and mse at `results/metrics/`
 
-or
+## Results
 
-> Wenjie Du. (2023).
-> PyPOTS: A Python Toolbox for Data Mining on Partially-Observed Time Series.
-> arXiv, abs/2305.18811. https://doi.org/10.48550/arXiv.2305.18811
+Discuss the results of your research or project. This could include:
 
+![Screenshot](static/mse_results.png)
 
-## ❖ Contribution
-You're very welcome to contribute to this exciting project!
+The above table outlines the RMSE results of our models. The Mechanistic ODE model, with with the least RMSE stands out, emphasizing its ability to predict with high accuracy even with sparse data. The Reservoir and LSTM models also reported competitive RMSE values, with a notable performance from the LSTM model with a RMSE of 0.165 on the 180th day with raw input.
 
-By committing your code, you'll
-
-1. make your well-established model out-of-the-box for PyPOTS users to run,
-   and help your work obtain more exposure and impact.
-   Take a look at our [inclusion criteria](https://docs.pypots.com/en/latest/faq.html#inclusion-criteria).
-   You can utilize the `template` folder in each task package (e.g.
-   [pypots/imputation/template](https://github.com/WenjieDu/PyPOTS/tree/main/pypots/imputation/template)) to quickly start;
-2. be listed as one of [PyPOTS contributors](https://github.com/WenjieDu/PyPOTS/graphs/contributors):
-   <img align="center" src="https://contrib.rocks/image?repo=wenjiedu/pypots">;
-3. get mentioned in our [release notes](https://github.com/WenjieDu/PyPOTS/releases);
-
-You can also contribute to PyPOTS by simply staring🌟 this repo to help more people notice it.
-Your star is your recognition to PyPOTS, and it matters!
-
-<details open>
-<summary>
-    <b><i>
-    👏 Click here to view PyPOTS stargazers and forkers.<br>
-    We're so proud to have more and more awesome users, as well as more bright ✨stars:
-    </i></b>
-</summary>
-<a href="https://github.com/WenjieDu/PyPOTS/stargazers">
-    <img alt="PyPOTS stargazers" src="https://reporoster.com/stars/dark/WenjieDu/PyPOTS">
-</a>
-<br>
-<a href="https://github.com/WenjieDu/PyPOTS/network/members">
-    <img alt="PyPOTS forkers" src="https://reporoster.com/forks/dark/WenjieDu/PyPOTS">
-</a>
-</details>
-
-
-## ❖ Community
-We care about the feedback from our users, so we're building PyPOTS community on
-
-- [Slack](https://join.slack.com/t/pypots-org/shared_invite/zt-1gq6ufwsi-p0OZdW~e9UW_IA4_f1OfxA). General discussion, Q&A, and our development team are here;
-- [LinkedIn](https://www.linkedin.com/company/pypots). Official announcements and news are here;
-- [WeChat (微信公众号)](https://mp.weixin.qq.com/s/sNgZmgAyxDn2sZxXoWJYMA). We also run a group chat on WeChat,
-  and you can get the QR code from the official account after following it;
-
-If you have any suggestions or want to contribute ideas or share time-series related papers, join us and tell.
-PyPOTS community is open, transparent, and surely friendly. Let's work together to build and improve PyPOTS!
-
-
-[^1]: Du, W., Cote, D., & Liu, Y. (2023). [SAITS: Self-Attention-based Imputation for Time Series](https://doi.org/10.1016/j.eswa.2023.119619). *Expert systems with applications*.
-[^2]: Vaswani, A., Shazeer, N.M., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N., Kaiser, L., & Polosukhin, I. (2017). [Attention is All you Need](https://papers.nips.cc/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html). *NeurIPS 2017*.
-[^3]: Cao, W., Wang, D., Li, J., Zhou, H., Li, L., & Li, Y. (2018). [BRITS: Bidirectional Recurrent Imputation for Time Series](https://papers.nips.cc/paper/2018/hash/734e6bfcd358e25ac1db0a4241b95651-Abstract.html). *NeurIPS 2018*.
-[^4]: Che, Z., Purushotham, S., Cho, K., Sontag, D.A., & Liu, Y. (2018). [Recurrent Neural Networks for Multivariate Time Series with Missing Values](https://www.nature.com/articles/s41598-018-24271-9). *Scientific Reports*.
-[^5]: Zhang, X., Zeman, M., Tsiligkaridis, T., & Zitnik, M. (2022). [Graph-Guided Network for Irregularly Sampled Multivariate Time Series](https://arxiv.org/abs/2110.05357). *ICLR 2022*.
-[^6]: Ma, Q., Chen, C., Li, S., & Cottrell, G. W. (2021). [Learning Representations for Incomplete Time Series Clustering](https://ojs.aaai.org/index.php/AAAI/article/view/17070). *AAAI 2021*.
-[^7]: Jong, J.D., Emon, M.A., Wu, P., Karki, R., Sood, M., Godard, P., Ahmad, A., Vrooman, H.A., Hofmann-Apitius, M., & Fröhlich, H. (2019). [Deep learning for clustering of multivariate clinical patient trajectories with missing values](https://academic.oup.com/gigascience/article/8/11/giz134/5626377). *GigaScience*.
-[^8]: Chen, X., & Sun, L. (2021). [Bayesian Temporal Factorization for Multidimensional Time Series Prediction](https://arxiv.org/abs/1910.06366). *IEEE transactions on pattern analysis and machine intelligence*.
-[^9]: Yoon, J., Zame, W. R., & van der Schaar, M. (2019). [Estimating Missing Data in Temporal Data Streams Using Multi-Directional Recurrent Neural Networks](https://ieeexplore.ieee.org/document/8485748). *IEEE Transactions on Biomedical Engineering*.
-
-
-<details>
-<summary>🏠 Visits</summary>
-<a href="https://github.com/WenjieDu/PyPOTS">
-    <img alt="PyPOTS visits" align="left" src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FPyPOTS%2FPyPOTS&count_bg=%23009A0A&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Hits&edge_flat=false">
-</a>
-</details>
